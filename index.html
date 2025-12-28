@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>答题计时器</title>
+    <style>
+        /* 基础样式 - 浅色模式 */
+        :root {
+            --bg-color: #f5f5f5;
+            --container-bg: white;
+            --text-color: #333;
+            --timer-bg: #ecf0f1;
+            --timer-text: #2c3e50;
+            --instructions-text: #7f8c8d;
+            --th-bg: #3498db;
+            --th-text: white;
+            --tr-even: #f2f2f2;
+            --total-row: #2ecc71;
+            --total-row-text: white;
+            --input-border: #ccc;
+            --start-btn: #3498db;
+            --start-btn-hover: #2980b9;
+            --reset-btn: #e74c3c;
+            --reset-btn-hover: #c0392b;
+            --copy-btn: #9b59b6;
+            --copy-btn-hover: #8e44ad;
+            --highlight: #e74c3c;
+            --active: #27ae60;
+            --td-border: #ddd;
+            --shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 黑暗模式变量 */
+        .dark-mode {
+            --bg-color: #1a1a1a;
+            --container-bg: #2d2d2d;
+            --text-color: #f5f5f5;
+            --timer-bg: #3d3d3d;
+            --timer-text: #e0e0e0;
+            --instructions-text: #b0b0b0;
+            --th-bg: #2980b9;
+            --th-text: white;
+            --tr-even: #383838;
+            --total-row: #27ae60;
+            --total-row-text: white;
+            --input-border: #555;
+            --start-btn: #2980b9;
+            --start-btn-hover: #1f618d;
+            --reset-btn: #c0392b;
+            --reset-btn-hover: #a93226;
+            --copy-btn: #8e44ad;
+            --copy-btn-hover: #7d3c98;
+            --highlight: #e74c3c;
+            --active: #2ecc71;
+            --td-border: #555;
+            --shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        .container {
+            background-color: var(--container-bg);
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--text-color);
+            margin-bottom: 30px;
+        }
+
+        .status {
+            text-align: center;
+            font-size: 24px;
+            margin: 20px 0;
+            height: 40px;
+        }
+
+        .timer-display {
+            text-align: center;
+            font-size: 36px;
+            font-weight: bold;
+            color: var(--timer-text);
+            margin: 20px 0;
+            padding: 15px 5px;
+            background-color: var(--timer-bg);
+            border-radius: 8px;
+        }
+
+        .instructions {
+            text-align: center;
+            color: var(--instructions-text);
+            margin: 20px 0;
+            font-size: 16px;
+        }
+
+        .results {
+            margin-top: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            table-layout: fixed;
+        }
+
+        th,
+        td {
+            border: 1px solid var(--td-border);
+            padding: 6px 12px;
+            text-align: center;
+            word-wrap: break-word;
+        }
+
+        th {
+            background-color: var(--th-bg);
+            color: var(--th-text);
+        }
+
+        tr:nth-child(even) {
+            background-color: var(--tr-even);
+        }
+
+        .total-row {
+            background-color: var(--total-row) !important;
+            color: var(--total-row-text);
+            font-weight: bold;
+        }
+
+        input.correctness-input {
+            width: 100%;
+            padding: 5px;
+            border: 1px solid var(--input-border);
+            border-radius: 4px;
+            box-sizing: border-box;
+            text-align: center;
+            background-color: var(--container-bg);
+            color: var(--text-color);
+        }
+
+        .btn-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .start-btn,
+        .reset-btn,
+        .copy-btn,
+        .theme-btn {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin: 0 10px 10px 10px;
+        }
+
+        .start-btn {
+            background-color: var(--start-btn);
+            color: white;
+        }
+
+        .start-btn:hover {
+            background-color: var(--start-btn-hover);
+        }
+
+        .reset-btn {
+            background-color: var(--reset-btn);
+            color: white;
+        }
+
+        .reset-btn:hover {
+            background-color: var(--reset-btn-hover);
+        }
+
+        .copy-btn {
+            background-color: var(--copy-btn);
+            color: white;
+        }
+
+        .copy-btn:hover {
+            background-color: var(--copy-btn-hover);
+        }
+
+        .theme-btn {
+            background-color: #666;
+            color: white;
+        }
+
+        .theme-btn:hover {
+            background-color: #444;
+        }
+
+        .highlight {
+            color: var(--highlight);
+            font-weight: bold;
+        }
+
+        .active {
+            color: var(--active);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>答题计时器</h1>
+
+        <div class="status" id="status">准备就绪</div>
+
+        <div class="timer-display" id="currentTimer">00:00</div>
+
+        <div class="instructions">
+            <p>按 <span class="highlight">空格键</span> 开始/记录题目用时</p>
+            <p>长按 <span class="highlight">空格键</span> (1秒以上) 结束计时</p>
+            <p>按 <span class="highlight">回车键</span> 更新上一道题的答题记录</p>
+        </div>
+
+        <div class="btn-container">
+            <button class="start-btn" id="startBtn">开始计时</button>
+            <button class="reset-btn" id="resetBtn">重置</button>
+            <button class="theme-btn" id="themeBtn">黑暗模式</button>
+        </div>
+
+        <div class="results">
+            <table id="resultsTable">
+                <thead>
+                    <tr>
+                        <th>题目序号</th>
+                        <th>答题用时</th>
+                        <th>累计用时</th>
+                        <th>对错</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsBody">
+                </tbody>
+            </table>
+            <div id="totalTime" style="margin-top: 20px; text-align: center; font-size: 20px; font-weight: bold;"></div>
+        </div>
+
+        <div class="btn-container">
+            <button class="copy-btn" id="copyBtn">复制结果</button>
+        </div>
+    </div>
+
+    <script>
+        class AnswerTimer {
+            constructor() {
+                this.startTime = null;
+                this.lastRecordTime = null;
+                this.questions = [];
+                this.correctnessFlags = [];
+                this.isRunning = false;
+                this.isLongPress = false;
+                this.longPressTimer = null;
+
+                this.statusEl = document.getElementById('status');
+                this.currentTimerEl = document.getElementById('currentTimer');
+                this.resultsBodyEl = document.getElementById('resultsBody');
+                this.totalTimeEl = document.getElementById('totalTime');
+                this.startBtn = document.getElementById('startBtn');
+                this.resetBtn = document.getElementById('resetBtn');
+                this.copyBtn = document.getElementById('copyBtn');
+                this.themeBtn = document.getElementById('themeBtn');
+
+                // 初始化黑暗模式状态
+                this.isDarkMode = localStorage.getItem('darkMode') === 'true';
+                if (this.isDarkMode) {
+                    document.body.classList.add('dark-mode');
+                    this.themeBtn.textContent = '浅色模式';
+                }
+
+                // 确保所有元素都存在后再初始化事件监听器
+                if (this.statusEl && this.currentTimerEl && this.resultsBodyEl &&
+                    this.totalTimeEl && this.startBtn && this.resetBtn && this.copyBtn && this.themeBtn) {
+                    this.initEventListeners();
+                } else {
+                    console.error("DOM 元素未找到，无法初始化计时器");
+                }
+
+                this.updateDisplay();
+            }
+
+            initEventListeners() {
+                // 空格键和回车键事件监听
+                document.addEventListener('keydown', (e) => {
+                    if (e.code === 'Space') {
+                        e.preventDefault();
+                        this.longPressTimer = setTimeout(() => {
+                            this.isLongPress = true;
+                            this.endTiming();
+                        }, 1000);
+                    } else if (e.code === 'Enter') {
+                        e.preventDefault();
+                        this.updateLastQuestion();
+                    }
+                });
+
+                document.addEventListener('keyup', (e) => {
+                    if (e.code === 'Space') {
+                        e.preventDefault();
+                        if (this.longPressTimer) {
+                            clearTimeout(this.longPressTimer);
+                            this.longPressTimer = null;
+                        }
+                        if (!this.isLongPress) {
+                            this.recordQuestionTime();
+                        }
+                        this.isLongPress = false;
+                    }
+                });
+
+                // 按钮事件
+                this.startBtn.addEventListener('click', () => this.startTiming());
+                this.resetBtn.addEventListener('click', () => this.reset());
+                this.copyBtn.addEventListener('click', () => this.copyResults());
+                // 黑暗模式切换事件
+                this.themeBtn.addEventListener('click', () => this.toggleDarkMode());
+            }
+
+            // 切换黑暗模式
+            toggleDarkMode() {
+                this.isDarkMode = !this.isDarkMode;
+                document.body.classList.toggle('dark-mode', this.isDarkMode);
+                this.themeBtn.textContent = this.isDarkMode ? '浅色模式' : '黑暗模式';
+                // 保存到本地存储
+                localStorage.setItem('darkMode', this.isDarkMode);
+            }
+
+            startTiming() {
+                if (!this.isRunning) {
+                    this.startTime = Date.now();
+                    this.lastRecordTime = this.startTime;
+                    this.isRunning = true;
+                    this.questions = [];
+                    this.correctnessFlags = [];
+
+                    this.statusEl.textContent = '正在计时... 按空格记录题目用时';
+                    this.statusEl.className = 'status active';
+                    this.startBtn.textContent = '计时期间';
+                    this.startBtn.disabled = true;
+
+                    this.updateTimer();
+                    this.timerInterval = setInterval(() => this.updateTimer(), 100);
+                }
+            }
+
+            recordQuestionTime() {
+                if (!this.isRunning) {
+                    this.startTiming();
+                    return;
+                }
+
+                const currentTime = Date.now();
+                const questionTime = currentTime - this.lastRecordTime;
+                const totalTime = currentTime - this.startTime;
+
+                this.questions.push({
+                    time: questionTime,
+                    cumulative: totalTime
+                });
+                this.correctnessFlags.push('');
+
+                this.lastRecordTime = currentTime;
+                this.updateResults();
+                this.updateDisplay();
+
+                console.log(`第${this.questions.length}题用时: ${this.formatTime(questionTime)}, 累计用时: ${this.formatTime(totalTime)}`);
+            }
+
+            // 回车键更新最后一题的用时
+            updateLastQuestion() {
+                if (!this.isRunning || this.questions.length === 0) {
+                    return; // 未开始或无题目，忽略
+                }
+
+                const currentTime = Date.now();
+                const newQuestionTime = currentTime - this.lastRecordTime + this.questions[this.questions.length - 1].time;
+                const newCumulative = currentTime - this.startTime;
+
+                // 更新最后一题
+                this.questions[this.questions.length - 1] = {
+                    time: newQuestionTime,
+                    cumulative: newCumulative
+                };
+
+                // 更新 lastRecordTime 为当前时间（以便下一题从现在开始计）
+                this.lastRecordTime = currentTime;
+
+                this.updateResults();
+                this.updateDisplay();
+
+                console.log(`已更新第${this.questions.length}题用时为: ${this.formatTime(newQuestionTime)}`);
+            }
+
+            endTiming() {
+                if (this.isRunning) {
+                    this.isRunning = false;
+                    if (this.timerInterval) clearInterval(this.timerInterval);
+
+                    this.statusEl.textContent = '计时已结束';
+                    this.statusEl.className = 'status';
+                    this.startBtn.textContent = '重新开始';
+                    this.startBtn.disabled = false;
+                }
+            }
+
+            updateTimer() {
+                if (this.isRunning && this.startTime) {
+                    const elapsed = Date.now() - this.startTime;
+                    this.currentTimerEl.textContent = this.formatTime(elapsed);
+                }
+            }
+
+            updateDisplay() {
+                if (this.isRunning && this.startTime) {
+                    const elapsed = Date.now() - this.startTime;
+                    this.currentTimerEl.textContent = this.formatTime(elapsed);
+                    window.scrollTo(0, window.innerHeight)
+                }
+            }
+
+            updateResults() {
+                this.resultsBodyEl.innerHTML = '';
+
+                this.questions.forEach((question, index) => {
+                    const row = document.createElement('tr');
+                    const correctnessInput = document.createElement('input');
+                    correctnessInput.type = 'text';
+                    correctnessInput.className = 'correctness-input';
+                    correctnessInput.value = this.correctnessFlags[index] || '';
+                    correctnessInput.addEventListener('input', (e) => {
+                        this.correctnessFlags[index] = e.target.value;
+                    });
+
+                    row.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${this.formatTime(question.time)}</td>
+                        <td>${this.formatTime(question.cumulative)}</td>
+                        <td></td>
+                    `;
+                    row.cells[3].appendChild(correctnessInput);
+                    this.resultsBodyEl.appendChild(row);
+                });
+
+                if (this.questions.length > 0) {
+                    const totalTime = this.questions[this.questions.length - 1].cumulative;
+                    this.totalTimeEl.innerHTML = `总用时: <span style="color: var(--active);">${this.formatTime(totalTime)}</span>`;
+                } else {
+                    this.totalTimeEl.innerHTML = '';
+                }
+            }
+
+            copyResults() {
+                if (this.questions.length === 0) {
+                    alert("暂无结果可复制。");
+                    return;
+                }
+
+                let textToCopy = "题目序号\t答题用时\t累计用时\t对错\n";
+                for (let i = 0; i < this.questions.length; i++) {
+                    const q = this.questions[i];
+                    const flag = this.correctnessFlags[i] || '';
+                    textToCopy += `${i + 1}\t${this.formatTime(q.time)}\t${this.formatTime(q.cumulative)}\t${flag}\n`;
+                }
+
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    alert("结果已复制到剪贴板！");
+                }).catch(err => {
+                    console.error('无法复制结果: ', err);
+                    const textArea = document.createElement("textarea");
+                    textArea.value = textToCopy;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    try {
+                        const successful = document.execCommand('copy');
+                        document.body.removeChild(textArea);
+                        if (successful) {
+                            alert("结果已复制到剪贴板！");
+                        } else {
+                            throw new Error('execCommand failed');
+                        }
+                    } catch (err) {
+                        document.body.removeChild(textArea);
+                        console.error('Fallback: Oops, unable to copy', err);
+                        prompt("复制失败，请手动复制以下内容:", textToCopy);
+                    }
+                });
+            }
+
+            formatTime(milliseconds) {
+                const totalSeconds = Math.floor(milliseconds / 1000);
+                const hours = Math.floor(totalSeconds / 3600);
+                const minutes = Math.floor(totalSeconds % 3600 / 60);
+                const seconds = totalSeconds % 60;
+                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+
+            reset() {
+                this.isRunning = false;
+                this.startTime = null;
+                this.lastRecordTime = null;
+                this.questions = [];
+                this.correctnessFlags = [];
+
+                if (this.timerInterval) clearInterval(this.timerInterval);
+                if (this.longPressTimer) {
+                    clearTimeout(this.longPressTimer);
+                    this.longPressTimer = null;
+                }
+                this.isLongPress = false;
+
+                this.statusEl.textContent = '准备就绪';
+                this.statusEl.className = 'status';
+                this.currentTimerEl.textContent = '00:00';
+                this.resultsBodyEl.innerHTML = '';
+                this.totalTimeEl.innerHTML = '';
+                this.startBtn.textContent = '开始计时';
+                this.startBtn.disabled = false;
+            }
+        }
+
+        // 初始化计时器
+        const timer = new AnswerTimer();
+    </script>
+</body>
+
+</html>
